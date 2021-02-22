@@ -17,7 +17,8 @@ byte e;
 char message_received[100];
 char message_sent[]="hola";
 
-LoRa_E32 e32ttl100(TX, 3, 5, 6, 7);  // e32 TX e32 RX
+//Configuramos la clase para el módulo 3
+LoRa_E32 e32ttl100(RX, TX, &Serial1, AUX, M0, M1);  // e32 TX e32 RX 
 
 void setup()
 {
