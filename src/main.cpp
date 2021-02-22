@@ -43,18 +43,12 @@ void setup()
   pinMode(SS2, OUTPUT);
   digitalWrite(SS2,HIGH);
 
-  //Inicializamos pines del módulo 3
-  pinMode(AUX, INPUT);
-  pinMode(M0, OUTPUT);
-  pinMode(M1, OUTPUT);
+  //Iniciamos comunicación para el Módulo 3
+  e32ttl100.begin();
 
   // Abrimos comunicaciones para observar 
   Serial.begin(115200); 
 
-  //Iniciamos comunicación para el Módulo 3
-
-  Serial1.begin(9600, SERIAL_8N1, RX, TX);
-  
   //Iniciamos los modulos en reset
   digitalWrite(RST1,0);
   digitalWrite(RST2,0);
