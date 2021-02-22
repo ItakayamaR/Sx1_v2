@@ -9,6 +9,7 @@
 #define LORA_CHANNEL  915E6
 #define LORA_ADDRESS  4
 #define LORA_SEND_TO_ADDRESS  2
+#define E32_TTL_1W
 
 byte MODO = 0;
 byte MODO_ANT = 0;
@@ -219,28 +220,17 @@ void loop(void)
 
   } else if (MODO == 3){
     
-      
-      
-      
-      
-    /*  if (Serial1.available() > 0) {
-        i=0;
-        Serial.println(F("Package received!"));
-        while (Serial1.available() > 0){
-          // Leemos el byte recibido:
-          message_received[i]=Serial1.read();
-          i++;
-        }
-        //Parpadeamos el led
-        digitalWrite(LED, HIGH);
-        delay(500);
-        digitalWrite(LED, LOW);
+    ResponseStatus rs = e32ttl.sendMessage("Prova");
+    Serial.println(rs.getResponseDescription());
+    
 
-        //Imprimimos el mensaje recibido
-        Serial.print("Message: ");
-        Serial.println(message_received);
-      }
-    */
+    if (e32ttl.available()  > 1){
+    ResponseContainer rs = e32ttl.receiveMessage();
+    String message = rs.data; // First ever get the data
+    Serial.println(rs.status.getResponseDescription());
+    Serial.println(message);
+    }
+      
   }
   delay(3000);
 }

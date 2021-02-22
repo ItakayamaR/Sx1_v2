@@ -34,6 +34,8 @@
 #ifndef LoRa_E32_h
 #define LoRa_E32_h
 
+#define E32_TTL_1W
+
 #ifndef ESP32
 	#define ACTIVATE_SOFTWARE_SERIAL
 #endif
