@@ -22,10 +22,10 @@ char message_sent[]="hola";
 //Configuramos la clase para el módulo 3
 LoRa_E32 E32_433(RX, TX, &Serial1, AUX, M0, M1);  // e32 TX e32 RX 
 
-void Ini_LoraModule(byte m);
-void terminar_spi();
-void iniciar_modulo3();
-void terminar_modulo3();
+void Ini_module_spi(byte m); 
+void Ini_module3();
+void End_module3();
+void End_module_spi();
 void EnableDevice(byte m);
 
 void setup()
@@ -73,12 +73,11 @@ void loop(void)
   MODO = ( (digitalRead(SEL2)<<1) + digitalRead(SEL1) );
   
   if (MODO_ANT != MODO){
-    EnableDevice(MODO);
+    EnableDevice(MODO);         //Habilitamos el modulo según la posición de los jumpers
     MODO_ANT=MODO;
   }
 
   if (MODO==1 || MODO==2){
-
     // Enviamos un mensaje 
     LoRa.beginPacket();
     LoRa.print(message_sent);
@@ -99,16 +98,14 @@ void loop(void)
         Serial.print(LoRaData); 
       }
 
-      // print RSSI of packet
+      // Imprimimos el RSSI
       Serial.print("' with RSSI ");
       Serial.println(LoRa.packetRssi());
       //Prendemos el led por 0.5s
       digitalWrite(LED,1);
       delay(500);
       digitalWrite(LED,0);
-
     }
-
 
   } else if (MODO == 3){
     
@@ -127,8 +124,7 @@ void loop(void)
       digitalWrite(LED,1);
       delay(500);
       digitalWrite(LED,0);
-    }
-      
+    }     
   }
   delay(3000);
 }
