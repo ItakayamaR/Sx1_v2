@@ -19,7 +19,13 @@ char message_received[100];
 char message_sent[]="hola";
 
 //Configuramos la clase para el módulo 3
-LoRa_E32 e32ttl100(RX, TX, &Serial1, AUX, M0, M1);  // e32 TX e32 RX 
+LoRa_E32 E32_433(RX, TX, &Serial1, AUX, M0, M1);  // e32 TX e32 RX 
+
+void Ini_LoraModule(byte m);
+void terminar_spi();
+void iniciar_modulo3();
+void terminar_modulo3();
+void EnableDevice(byte m);
 
 void setup()
 {
@@ -45,7 +51,7 @@ void setup()
   digitalWrite(SS2,HIGH);
 
   //Iniciamos comunicación para el Módulo 3
-  e32ttl100.begin();
+  E32_433.begin();
 
   // Abrimos comunicaciones para observar 
   Serial.begin(115200); 
@@ -56,6 +62,69 @@ void setup()
   digitalWrite(M0,1);
   digitalWrite(M1,1);
   
+}
+
+void loop(void)
+{ 
+  // Leemos el modo
+  MODO = ( (digitalRead(SEL2)<<1) + digitalRead(SEL1) );
+  
+  if (MODO_ANT != MODO){
+    EnableDevice(MODO);
+    MODO_ANT=MODO;
+  }
+
+  if (MODO==1 || MODO==2){
+
+
+    // Enviamos un mensaje 
+    e = sx1278.sendPacketTimeout(LORA_SEND_TO_ADDRESS, message_sent);
+    Serial.print(F("Packet sent, state "));
+    Serial.println(e, DEC);      
+    if (e == 0) {
+      digitalWrite(LED, HIGH);
+      delay(500);
+      digitalWrite(LED, LOW);
+    }
+
+    // Esperamos el envío de un mensaje por 8 segundos
+    e = sx1278.receivePacketTimeout(8000);
+    if (e == 0) {
+      digitalWrite(LED, HIGH);
+      delay(500);
+      digitalWrite(LED, LOW);
+        
+      Serial.println(F("Package received!"));
+
+      for (unsigned int i = 0; i < sx1278.packet_received.length; i++) {
+        message_received[i] = (char)sx1278.packet_received.data[i];
+      }
+      
+      Serial.print(F("Message: "));
+      Serial.println(message_received);
+    } else {
+      Serial.print(F("Package received ERROR\n"));
+    }
+
+
+
+
+  } else if (MODO == 3){
+    
+    ResponseStatus rs = E32_433.sendMessage(message_sent);
+    Serial.println(rs.getResponseDescription());
+    
+    delay(4000);
+
+    if (E32_433.available()  > 1){
+    ResponseContainer rs = E32_433.receiveMessage();
+    String message = rs.data; // First ever get the data
+    Serial.println(rs.status.getResponseDescription());
+    Serial.println(message);
+    }
+      
+  }
+  delay(3000);
 }
 
 void Ini_LoraModule(byte m) 
@@ -134,12 +203,41 @@ void terminar_spi(){
   SPI.end();
 }
 
-void iniciar_uart(){
+void iniciar_modulo3(){
   digitalWrite(M0,1);
   digitalWrite(M1,1);
+  
+  ResponseStructContainer c;
+	c = E32_433.getConfiguration();
+	// It's important get configuration pointer before all other operation
+	Configuration configuration = *(Configuration*) c.data;
+	Serial.println(c.status.getResponseDescription());
+	Serial.println(c.status.code);
+
+	printParameters(configuration);
+	configuration.ADDL = 0x0;
+	configuration.ADDH = 0x1;
+	configuration.CHAN = 0x19;
+
+	configuration.OPTION.fec = FEC_0_OFF;
+	configuration.OPTION.fixedTransmission = FT_TRANSPARENT_TRANSMISSION;
+	configuration.OPTION.ioDriveMode = IO_D_MODE_PUSH_PULLS_PULL_UPS;
+	configuration.OPTION.transmissionPower = POWER_30;
+	configuration.OPTION.wirelessWakeupTime = WAKE_UP_1250;
+
+	configuration.SPED.airDataRate = AIR_DATA_RATE_011_48;
+	configuration.SPED.uartBaudRate = UART_BPS_115200;
+	configuration.SPED.uartParity = MODE_00_8N1;
+
+	// Set configuration changed and set to not hold the configuration
+	ResponseStatus rs = E32_433.setConfiguration(configuration, WRITE_CFG_PWR_DWN_LOSE);
+	Serial.println(rs.getResponseDescription());
+	Serial.println(rs.code);
+	printParameters(configuration);
+	c.close();
 }
 
-void terminar_uart(){
+void terminar_modulo3(){
   digitalWrite(M0,1);
   digitalWrite(M1,1);  
 }
@@ -147,7 +245,7 @@ void terminar_uart(){
 
 void EnableDevice(byte m){
   terminar_spi();
-  terminar_uart();
+  terminar_modulo3();
   
   switch(m)
   {
@@ -166,71 +264,7 @@ void EnableDevice(byte m){
 
     case 3:
       Serial.println("modo 3");
-      iniciar_uart(); 
+      iniciar_modulo3(); 
       break;
   }
-}
-
-void loop(void)
-{ 
-  byte i;
-
-  // Leemos el modo
-  MODO = ( (digitalRead(SEL2)<<1) + digitalRead(SEL1) );
-  
-  if (MODO_ANT != MODO){
-    EnableDevice(MODO);
-    MODO_ANT=MODO;
-  }
-
-  if (MODO==1 || MODO==2){
-
-
-    // Enviamos un mensaje 
-    e = sx1278.sendPacketTimeout(LORA_SEND_TO_ADDRESS, message_sent);
-    Serial.print(F("Packet sent, state "));
-    Serial.println(e, DEC);      
-    if (e == 0) {
-      digitalWrite(LED, HIGH);
-      delay(500);
-      digitalWrite(LED, LOW);
-    }
-
-    // Esperamos el envío de un mensaje por 8 segundos
-    e = sx1278.receivePacketTimeout(8000);
-    if (e == 0) {
-      digitalWrite(LED, HIGH);
-      delay(500);
-      digitalWrite(LED, LOW);
-        
-      Serial.println(F("Package received!"));
-
-      for (unsigned int i = 0; i < sx1278.packet_received.length; i++) {
-        message_received[i] = (char)sx1278.packet_received.data[i];
-      }
-      
-      Serial.print(F("Message: "));
-      Serial.println(message_received);
-    } else {
-      Serial.print(F("Package received ERROR\n"));
-    }
-
-
-
-
-  } else if (MODO == 3){
-    
-    ResponseStatus rs = e32ttl.sendMessage("Prova");
-    Serial.println(rs.getResponseDescription());
-    
-
-    if (e32ttl.available()  > 1){
-    ResponseContainer rs = e32ttl.receiveMessage();
-    String message = rs.data; // First ever get the data
-    Serial.println(rs.status.getResponseDescription());
-    Serial.println(message);
-    }
-      
-  }
-  delay(3000);
 }

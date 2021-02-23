@@ -35,6 +35,7 @@
 #define LoRa_E32_h
 
 #define E32_TTL_1W
+#define FREQUENCY_433
 
 #ifndef ESP32
 	#define ACTIVATE_SOFTWARE_SERIAL
@@ -324,4 +325,7 @@ class LoRa_E32 {
 #endif
 };
 
+void printParameters(struct Configuration configuration);
+
 #endif
+
