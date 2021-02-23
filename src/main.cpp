@@ -6,7 +6,7 @@
 
 //Definiciones para la libreria
 #define LORA_BW               125E3
-#define LORA_SP               12
+#define LORA_SP               7
 #define LORA_CHANNEL          915E6
 #define LORA_SYNCWORD         0x12
 #define LORA_ADDRESS          4
@@ -18,6 +18,7 @@ byte MODO_ANT = 0;
 byte e;
 char message_received[100];
 char message_sent[]="hola";
+int counter=0;
 
 //Configuramos la clase para el módulo 3
 LoRa_E32 E32_433(RX, TX, &Serial1, AUX, M0, M1);  // e32 TX e32 RX 
@@ -68,23 +69,31 @@ void setup()
 void loop(void)
 { 
   //Contador para saber el número de veces que se ha enviado un archivo
-  int counter=0;
+  
   // Leemos el modo
   MODO = ( (digitalRead(SEL2)<<1) + digitalRead(SEL1) );
   
   if (MODO_ANT != MODO){
     EnableDevice(MODO);         //Habilitamos el modulo según la posición de los jumpers
     MODO_ANT=MODO;
+    counter=0;
   }
 
   if (MODO==1 || MODO==2){
-    // Enviamos un mensaje 
+    // Enviamos un mensaje
+    Serial.println("Start sending message"); 
     LoRa.beginPacket();
     LoRa.print(message_sent);
-    LoRa.print(counter);
+    LoRa.print("counter");
     LoRa.endPacket();
     counter++;
-    
+
+    Serial.print("Message sent: ");
+    Serial.println(message_sent);
+    Serial.print("Message n° ");
+    Serial.println(counter);
+    Serial.println("");
+
     delay(4000);
 
     int packetSize = LoRa.parsePacket();
@@ -126,7 +135,7 @@ void loop(void)
       digitalWrite(LED,0);
     }     
   }
-  delay(3000);
+  delay(1000);
 }
 
 void Ini_module_spi(byte m) 

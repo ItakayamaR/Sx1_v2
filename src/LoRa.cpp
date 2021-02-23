@@ -167,7 +167,6 @@ int LoRaClass::beginPacket(int implicitHeader)
 
 int LoRaClass::endPacket(bool async)
 {
-  
   if ((async) && (_onTxDone))
       writeRegister(REG_DIO_MAPPING_1, 0x40); // DIO0 => TXDONE
 
@@ -176,13 +175,16 @@ int LoRaClass::endPacket(bool async)
 
   if (!async) {
     // wait for TX done
-    while ((readRegister(REG_IRQ_FLAGS) & IRQ_TX_DONE_MASK) == 0) {
+    while ((readRegister(REG_IRQ_FLAGS) & IRQ_TX_DONE_MASK) == 0) 
+    {
+      //Serial.println(readRegister(REG_IRQ_FLAGS));
       yield();
+      //delay(500);
     }
     // clear IRQ's
     writeRegister(REG_IRQ_FLAGS, IRQ_TX_DONE_MASK);
   }
-
+  Serial.println("llego aqui final");
   return 1;
 }
 
