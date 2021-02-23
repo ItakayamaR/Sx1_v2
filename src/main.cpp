@@ -1,15 +1,16 @@
 #include <Arduino.h>
 #include <SPI.h>
-#include "SX1278.h"
 #include "Pines.h"
 #include "LoRa_E32.h"
+#include "LoRa.h"
 
 //Definiciones para la libreria
-#define LORA_MODE  4
-#define LORA_CHANNEL  915E6
-#define LORA_ADDRESS  4
+#define LORA_BW               125E3
+#define LORA_SP               12
+#define LORA_CHANNEL          915E6
+#define LORA_SYNCWORD         0x12
+#define LORA_ADDRESS          4
 #define LORA_SEND_TO_ADDRESS  2
-#define E32_TTL_1W
 
 byte MODO = 0;
 byte MODO_ANT = 0;
@@ -66,6 +67,8 @@ void setup()
 
 void loop(void)
 { 
+  //Contador para saber el número de veces que se ha enviado un archivo
+  int counter=0;
   // Leemos el modo
   MODO = ( (digitalRead(SEL2)<<1) + digitalRead(SEL1) );
   
@@ -76,134 +79,91 @@ void loop(void)
 
   if (MODO==1 || MODO==2){
 
-
     // Enviamos un mensaje 
-    e = sx1278.sendPacketTimeout(LORA_SEND_TO_ADDRESS, message_sent);
-    Serial.print(F("Packet sent, state "));
-    Serial.println(e, DEC);      
-    if (e == 0) {
-      digitalWrite(LED, HIGH);
-      delay(500);
-      digitalWrite(LED, LOW);
-    }
+    LoRa.beginPacket();
+    LoRa.print(message_sent);
+    LoRa.print(counter);
+    LoRa.endPacket();
+    counter++;
+    
+    delay(4000);
 
-    // Esperamos el envío de un mensaje por 8 segundos
-    e = sx1278.receivePacketTimeout(8000);
-    if (e == 0) {
-      digitalWrite(LED, HIGH);
-      delay(500);
-      digitalWrite(LED, LOW);
-        
-      Serial.println(F("Package received!"));
+    int packetSize = LoRa.parsePacket();
+    if (packetSize) {
+      // received a packet
+      Serial.print("Received packet '");
 
-      for (unsigned int i = 0; i < sx1278.packet_received.length; i++) {
-        message_received[i] = (char)sx1278.packet_received.data[i];
+      // read packet
+      while (LoRa.available()) {
+        String LoRaData = LoRa.readString();
+        Serial.print(LoRaData); 
       }
-      
-      Serial.print(F("Message: "));
-      Serial.println(message_received);
-    } else {
-      Serial.print(F("Package received ERROR\n"));
+
+      // print RSSI of packet
+      Serial.print("' with RSSI ");
+      Serial.println(LoRa.packetRssi());
+      //Prendemos el led por 0.5s
+      digitalWrite(LED,1);
+      delay(500);
+      digitalWrite(LED,0);
+
     }
-
-
 
 
   } else if (MODO == 3){
     
+    //enviamos un mensaje
     ResponseStatus rs = E32_433.sendMessage(message_sent);
     Serial.println(rs.getResponseDescription());
     
     delay(4000);
-
+    //Esperamos a recibir un mensaje
     if (E32_433.available()  > 1){
-    ResponseContainer rs = E32_433.receiveMessage();
-    String message = rs.data; // First ever get the data
-    Serial.println(rs.status.getResponseDescription());
-    Serial.println(message);
+      ResponseContainer rs = E32_433.receiveMessage();
+      String message = rs.data; // First ever get the data
+      Serial.println(rs.status.getResponseDescription());
+      Serial.println(message);
+      //Prendemos el led por 0.5s
+      digitalWrite(LED,1);
+      delay(500);
+      digitalWrite(LED,0);
     }
       
   }
   delay(3000);
 }
 
-void Ini_LoraModule(byte m) 
+void Ini_module_spi(byte m) 
 {
   //Inicializamos SPI en los pines correspondientes
   if (m==1){
-    digitalWrite(RST1,1);
-    SPI.begin(SCK, MISO, MOSI, SS1);    
+    LoRa.setPins(SCK, MISO, MOSI, SS1, RST1, DIO0_1);
 
   } else if (m==2) {
-    digitalWrite(RST2,1);
-    SPI.begin(SCK, MISO, MOSI, SS2);
+    LoRa.setPins(SCK, MISO, MOSI, SS2, RST2, DIO0_2);
   }
 
-  // Mensaje de comprobacion por serial
-  Serial.println(F("sx1278 module and Arduino: send two packets (One to an addrees and another one in broadcast)"));
-
-  // Inicializamos el modulo
-  if (sx1278.ON() == 0) {
-    Serial.println(F("Setting power ON: SUCCESS "));
-  } else {
-    Serial.println(F("Setting power ON: ERROR "));
+  //Seteamos la frecuencia deseada y los canalies  y esperamos que se configure
+  while (!LoRa.begin(LORA_CHANNEL)) {
+    Serial.println(".");
+    delay(500);
   }
 
-  // Seteamos el modo de transmisión a Lora
-  if (sx1278.setMode(LORA_MODE) == 0) {
-    Serial.println(F("Setting Mode: SUCCESS "));
-  } else {
-    Serial.println(F("Setting Mode: ERROR "));
-  }
+  LoRa.setSyncWord(LORA_SYNCWORD);        //Seteamos la dirección de sincronización
+  LoRa.setSpreadingFactor(LORA_SP);             //Seteamos el Spreading Factor (SP)
+  LoRa.setSignalBandwidth(LORA_BW);         //Seteamos El ancho de banda
+  LoRa.setCodingRate4(5);                 //Seteamos el Coding rate (4/(x-4))
+  LoRa.setPreambleLength(8);              //Seteamos la longitud del preambulo (x+4)
 
-  // Activamos el envío de Header
-  if (sx1278.setHeaderON() == 0) {
-    Serial.println(F("Setting Header ON: SUCCESS "));
-  } else {
-    Serial.println(F("Setting Header ON: ERROR "));
-  }
-
-  // Seleccionamos la frecuencia del canal
-  if (sx1278.setChannel(LORA_CHANNEL) == 0) {
-    Serial.println(F("Setting Channel: SUCCESS "));
-  } else {
-    Serial.println(F("Setting Channel: ERROR "));
-  }
-
-  // Activamos el envío de crc
-  if (sx1278.setCRC_ON() == 0) {
-    Serial.println(F("Setting CRC ON: SUCCESS "));
-  } else {
-    Serial.println(F("Setting CRC ON: ERROR "));
-  }
-
-  // Seleccionamos la potencia de envío (Max, High, Intermediate or Low)
-  if (sx1278.setPower('M') == 0) {
-    Serial.println(F("Setting Power: SUCCESS "));
-  } else {
-    Serial.println(F("Setting Power: ERROR "));
-  }
-
-  // Definimos la dirección del nodo de envio
-  if (sx1278.setNodeAddress(LORA_ADDRESS) == 0) {
-    Serial.println(F("Setting node address: SUCCESS "));
-  } else {
-    Serial.println(F("Setting node address: ERROR "));
-  }
 
   // Mensaje de comprobación
-  Serial.println(F("sx1278 configured finished"));
+  Serial.println(F("Module configured finished"));
   Serial.println();
 
 }
 
-void terminar_spi(){
-  digitalWrite(RST1,1);
-  digitalWrite(RST2,1);
-  SPI.end();
-}
 
-void iniciar_modulo3(){
+void Ini_module3(){
   digitalWrite(M0,1);
   digitalWrite(M1,1);
   
@@ -237,15 +197,20 @@ void iniciar_modulo3(){
 	c.close();
 }
 
-void terminar_modulo3(){
+void End_module3(){
   digitalWrite(M0,1);
   digitalWrite(M1,1);  
 }
 
+void End_module_spi(){
+  LoRa.end();
+  digitalWrite(RST1,1);
+  digitalWrite(RST2,1);
+}
 
 void EnableDevice(byte m){
-  terminar_spi();
-  terminar_modulo3();
+  End_module_spi();
+  End_module3();
   
   switch(m)
   {
@@ -255,16 +220,16 @@ void EnableDevice(byte m){
 
     case 1:
       Serial.println("modo 1");
-      Ini_LoraModule(m);
+      Ini_module_spi(m);
       break;
     case 2:
       Serial.println("modo 2");
-      Ini_LoraModule(m);
+      Ini_module_spi(m);
       break;
 
     case 3:
       Serial.println("modo 3");
-      iniciar_modulo3(); 
+      Ini_module3(); 
       break;
   }
 }
