@@ -184,7 +184,7 @@ int LoRaClass::endPacket(bool async)
     // clear IRQ's
     writeRegister(REG_IRQ_FLAGS, IRQ_TX_DONE_MASK);
   }
-  Serial.println("llego aqui final");
+  //Serial.println("llego aqui final");
   return 1;
 }
 
@@ -207,6 +207,7 @@ int LoRaClass::parsePacket(int size)
   int packetLength = 0;
   int irqFlags = readRegister(REG_IRQ_FLAGS);
 
+  //Serial.println("Llega aqui"); 
   if (size > 0) {
     implicitHeaderMode();
 
@@ -217,6 +218,8 @@ int LoRaClass::parsePacket(int size)
 
   // clear IRQ's
   writeRegister(REG_IRQ_FLAGS, irqFlags);
+
+  //Serial.println(irqFlags); 
 
   if ((irqFlags & IRQ_RX_DONE_MASK) && (irqFlags & IRQ_PAYLOAD_CRC_ERROR_MASK) == 0) {
     // received a packet

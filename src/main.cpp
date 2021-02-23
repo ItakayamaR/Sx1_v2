@@ -1,12 +1,13 @@
 #include <Arduino.h>
 #include <SPI.h>
+#include <stdio.h>
 #include "Pines.h"
 #include "LoRa_E32.h"
 #include "LoRa.h"
 
 //Definiciones para la libreria
 #define LORA_BW               125E3
-#define LORA_SP               7
+#define LORA_SP               10
 #define LORA_CHANNEL          915E6
 #define LORA_SYNCWORD         0x12
 #define LORA_ADDRESS          4
@@ -68,7 +69,7 @@ void setup()
 
 void loop(void)
 { 
-  //Contador para saber el número de veces que se ha enviado un archivo
+  uint8_t i = 0;
   
   // Leemos el modo
   MODO = ( (digitalRead(SEL2)<<1) + digitalRead(SEL1) );
@@ -76,66 +77,93 @@ void loop(void)
   if (MODO_ANT != MODO){
     EnableDevice(MODO);         //Habilitamos el modulo según la posición de los jumpers
     MODO_ANT=MODO;
-    counter=0;
+    counter=0;                  //Reiniciamos el contador
   }
 
   if (MODO==1 || MODO==2){
-    // Enviamos un mensaje
+    // Enviamos un mensaje 
     Serial.println("Start sending message"); 
     LoRa.beginPacket();
-    LoRa.print(message_sent);
-    LoRa.print("counter");
+    LoRa.println(message_sent);
+    LoRa.print("Message n° ");
+    LoRa.println(counter);
     LoRa.endPacket();
     counter++;
 
-    Serial.print("Message sent: ");
-    Serial.println(message_sent);
-    Serial.print("Message n° ");
-    Serial.println(counter);
-    Serial.println("");
+    //Serial.print("Message sent: ");
+    //Serial.println(message_sent);
+    //Serial.print("Message n° ");
+    //Serial.println(counter);
+    //Serial.println(""); 
 
-    delay(4000);
+    //Ponemos a Lora en modo de recepcion
+    LoRa.receive();
+    delay(3000);
+    while(i < 10 ){
+      int packetSize = LoRa.parsePacket();
+      if (packetSize) {
+        // received a packet
+        Serial.print("Received packet '");
 
-    int packetSize = LoRa.parsePacket();
-    if (packetSize) {
-      // received a packet
-      Serial.print("Received packet '");
+        // read packet
+        while (LoRa.available()) {
+          String LoRaData = LoRa.readString();
+          Serial.print(LoRaData); 
+        }
 
-      // read packet
-      while (LoRa.available()) {
-        String LoRaData = LoRa.readString();
-        Serial.print(LoRaData); 
+        // Imprimimos el RSSI
+        Serial.print("' with RSSI ");
+        Serial.println(LoRa.packetRssi());
+        Serial.println("");
+        //Prendemos el led por 0.5s
+        digitalWrite(LED,1);
+        delay(500);
+        digitalWrite(LED,0);
+        break;
       }
-
-      // Imprimimos el RSSI
-      Serial.print("' with RSSI ");
-      Serial.println(LoRa.packetRssi());
-      //Prendemos el led por 0.5s
-      digitalWrite(LED,1);
-      delay(500);
-      digitalWrite(LED,0);
+      delay(400);
+      i++;
     }
 
   } else if (MODO == 3){
-    
+    boolean x= 0;
     //enviamos un mensaje
-    ResponseStatus rs = E32_433.sendMessage(message_sent);
-    Serial.println(rs.getResponseDescription());
-    
-    delay(4000);
+    char *Count = (char*)malloc(40);
+    sprintf(Count, "N°: %u, Msj: ", counter);
+    //enviamos un mensaje
+    ResponseStatus rs = E32_433.sendMessage(strcat(Count, message_sent));
+    if (rs.getResponseDescription() == "Success"){
+      Serial.println("Mensaje enviado");
+      counter++;
+    }
+    free(Count);
+    //Serial.println(rs.getResponseDescription());
+    Serial.println("");
+    //delay(15000);
     //Esperamos a recibir un mensaje
-    if (E32_433.available()  > 1){
-      ResponseContainer rs = E32_433.receiveMessage();
-      String message = rs.data; // First ever get the data
-      Serial.println(rs.status.getResponseDescription());
-      Serial.println(message);
-      //Prendemos el led por 0.5s
-      digitalWrite(LED,1);
-      delay(500);
-      digitalWrite(LED,0);
-    }     
+    while (!x & i<20) {
+      Serial.println("Esperando mensaje");
+      if (E32_433.available()  > 1){
+        ResponseContainer rs = E32_433.receiveMessage();
+        String message = rs.data; // First ever get the data
+        //Serial.println(rs.status.getResponseDescription());
+        if (rs.status.getResponseDescription() == "Success"){
+          Serial.print("Mensaje Recibido: ");
+        }
+        Serial.println(message);
+        //Prendemos el led por 0.5s
+        digitalWrite(LED,1);
+        delay(500);
+        digitalWrite(LED,0);
+        x=1;
+      } 
+      delay(1000);
+      i++;
+    }
+
+    Serial.println("");    
   }
-  delay(1000);
+  //delay(3000);
 }
 
 void Ini_module_spi(byte m) 
@@ -184,14 +212,14 @@ void Ini_module3(){
 	configuration.ADDH = 0x1;
 	configuration.CHAN = 0x19;
 
-	configuration.OPTION.fec = FEC_0_OFF;
+	configuration.OPTION.fec = FEC_1_ON;
 	configuration.OPTION.fixedTransmission = FT_TRANSPARENT_TRANSMISSION;
 	configuration.OPTION.ioDriveMode = IO_D_MODE_PUSH_PULLS_PULL_UPS;
 	configuration.OPTION.transmissionPower = POWER_30;
 	configuration.OPTION.wirelessWakeupTime = WAKE_UP_1250;
 
-	configuration.SPED.airDataRate = AIR_DATA_RATE_011_48;
-	configuration.SPED.uartBaudRate = UART_BPS_115200;
+	configuration.SPED.airDataRate = AIR_DATA_RATE_000_03;
+	configuration.SPED.uartBaudRate = UART_BPS_9600;
 	configuration.SPED.uartParity = MODE_00_8N1;
 
 	// Set configuration changed and set to not hold the configuration
