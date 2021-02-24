@@ -124,7 +124,7 @@ void loop(void)
     LoRa.receive();                                     //Ponemos a Lora en modo de recepcion
     delay((3+(rand() % 5))*1000);                      //Delay para evitar saturación de mensajes
     while(i < 15){
-      //Serial.println("Esperando mensaje");
+      Serial.println("Esperando mensaje");
       int packetSize = LoRa.parsePacket();
       if (packetSize) {                                 //Si es que se ha recibido un paquete
         Serial.print("Received packet: ");  
