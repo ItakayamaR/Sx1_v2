@@ -103,10 +103,15 @@ int LoRaClass::begin(long frequency)
   // start SPI
   _spi->begin(_sck, _miso, _mosi);
 
+  // put in sleep mode
+  //sleep();
+
   // check version
   uint8_t version = readRegister(REG_VERSION);
   if (version != 0x12) {
+    Serial.println(readRegister(REG_VERSION));
     return 0;
+    
   }
 
   // put in sleep mode
@@ -167,20 +172,24 @@ int LoRaClass::beginPacket(int implicitHeader)
 
 int LoRaClass::endPacket(bool async)
 {
-  if ((async) && (_onTxDone))
+  if ((async) && (_onTxDone)){
       writeRegister(REG_DIO_MAPPING_1, 0x40); // DIO0 => TXDONE
-
-  // put in TX mode
+  }
+  // put in TX mode 
   writeRegister(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_TX);
+  delay(500);
 
   if (!async) {
     // wait for TX done
     while ((readRegister(REG_IRQ_FLAGS) & IRQ_TX_DONE_MASK) == 0) 
     {
       //Serial.println(readRegister(REG_IRQ_FLAGS));
+      //Serial.println(readRegister(REG_OP_MODE));
+      //Serial.println("Sending message");
       yield();
-      //delay(500);
+      //delay(1000);
     }
+    
     // clear IRQ's
     writeRegister(REG_IRQ_FLAGS, IRQ_TX_DONE_MASK);
   }
