@@ -122,7 +122,7 @@ void loop(void)
     //Serial.println(""); 
     
     LoRa.receive();                                     //Ponemos a Lora en modo de recepcion
-    delay((1+(rand() % 10))*1000);                      //Delay para evitar saturación de mensajes
+    delay((3+(rand() % 5))*1000);                      //Delay para evitar saturación de mensajes
     while(i < 15){
       //Serial.println("Esperando mensaje");
       int packetSize = LoRa.parsePacket();
@@ -161,7 +161,7 @@ void loop(void)
     free(Count);
     Serial.println("");
 
-    delay((1+(rand() % 10))*1000);                     //Delay para evitar saturación de mensajes
+    delay((3+(rand() % 5))*1000);                     //Delay para evitar saturación de mensajes
     //Esperamos a recibir un mensaje
     while (i<15) {
       //Serial.println("Esperando mensaje");
@@ -247,8 +247,7 @@ void Ini_module3(){
 	ResponseStatus rs = E32_433.setConfiguration(configuration, WRITE_CFG_PWR_DWN_LOSE);
 	Serial.println(rs.getResponseDescription());
 	Serial.println(rs.code);
-  c.close();
-  configuration = *(Configuration*) c.data;
+  
 	printParameters(configuration);
 	c.close();
 }

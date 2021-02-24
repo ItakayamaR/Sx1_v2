@@ -103,10 +103,15 @@ int LoRaClass::begin(long frequency)
   // start SPI
   _spi->begin(_sck, _miso, _mosi);
 
+  // put in sleep mode
+  //sleep();
+
   // check version
   uint8_t version = readRegister(REG_VERSION);
   if (version != 0x12) {
+    Serial.println(readRegister(REG_VERSION));
     return 0;
+    
   }
 
   // put in sleep mode
