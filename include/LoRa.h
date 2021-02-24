@@ -67,7 +67,7 @@ public:
   void enableInvertIQ();
   void disableInvertIQ();
   
-  void setOCP(uint8_t mA); // Over Current Protection control
+  void setOCP(uint8_t mA); // Activar limite de corriente
   
   void setGain(uint8_t gain); // Set LNA gain
 

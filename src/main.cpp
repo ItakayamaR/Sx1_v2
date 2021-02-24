@@ -231,7 +231,7 @@ void Ini_module3(){
 	printParameters(configuration);
 	configuration.ADDL = 0x0;
 	configuration.ADDH = 0x1;
-	configuration.CHAN = 0x17;   
+	configuration.CHAN = 0x17;                  //Canal 433
 
 	configuration.OPTION.fec = FEC_1_ON;
 	configuration.OPTION.fixedTransmission = FT_TRANSPARENT_TRANSMISSION;
@@ -247,6 +247,7 @@ void Ini_module3(){
 	ResponseStatus rs = E32_433.setConfiguration(configuration, WRITE_CFG_PWR_DWN_LOSE);
 	Serial.println(rs.getResponseDescription());
 	Serial.println(rs.code);
+  c.close();
   configuration = *(Configuration*) c.data;
 	printParameters(configuration);
 	c.close();
