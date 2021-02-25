@@ -1,22 +1,3 @@
-/*
- * Programa para prueba de modulos LoRa SxV2
- * 
- * Empresa: DIACSA
- * Autor: Ismael Takayama
- * Fecha: 23/02/2020
- * 
- * Programa para probar la comunicación de los módulos Lora RFM95W, LORA1276V2.0 y E32-433T30D
- * Manuales:
- * - https://cdn.sparkfun.com/assets/learn_tutorials/8/0/4/RFM95_96_97_98W.pdf (Lora RFM95W)
- * - https://fccid.io/2AD66-LORAV2/User-Manual/User-Manual-3379111 (LORA1276V2.0)
- * - https://www.ebyte.com/en/product-view-news.aspx?id=108 (E32-433T30D)
- *
- * Se usan las librerías LoRa de Sandeep Mistry y LoRa_E32 de Renzo Mischianti (www.mischianti.org)
- *
- * 
- * 
- */
-
 #include <Arduino.h>
 #include <SPI.h>
 #include <stdio.h>
@@ -24,23 +5,22 @@
 #include "LoRa_E32.h"
 #include "LoRa.h"
 
-//Definiciones para los módulos 1 y 2
-#define LORA_BW               125E3             // Ancho de banda (BW)
-#define LORA_SP               10                // Spreading Factor (SP)
-#define LORA_CHANNEL          915E6             // Canal de transmisión
-#define LORA_SYNCWORD         0x12              // Código de sincronización
-#define LORA_ADDRESS          4                 // Dirección del nodo transmisor
-#define LORA_SEND_TO_ADDRESS  2                 // Dirección del nodo receptor
 
-//Definiciones para el módulo 3
+//Definiciones para la libreria
+#define LORA_BW               125E3
+#define LORA_SP               12
+#define LORA_CHANNEL          915E6
+#define LORA_SYNCWORD         0x12
+#define LORA_ADDRESS          4
+#define LORA_SEND_TO_ADDRESS  2
 
+byte MODO = 0;
+byte MODO_ANT = 0;
 
-byte MODO = 0;                                  // Variable usada para identificar el modulo usado actualmente
-byte MODO_ANT = 0;                              
-
-char message_received[100];                     // Mensaje recibido
-char message_sent[]="hola";                     // Mensaje enviado
-int counter=0;                                  // Contador de mensajes enviados
+byte e;
+char message_received[100];
+char message_sent[]="hola";
+int counter=0;
 
 //Configuramos la clase para el módulo 3
 LoRa_E32 E32_433(RX, TX, &Serial1, AUX, M0, M1);  // e32 TX e32 RX 
@@ -53,6 +33,9 @@ void EnableDevice(byte m);
 
 void setup()
 {
+  delay(100);
+
+
     //Inicializamos los pines de LED y selección
   pinMode(LED, OUTPUT);
   pinMode(SEL1, INPUT);
@@ -77,7 +60,7 @@ void setup()
   //Iniciamos comunicación para el Módulo 3
   E32_433.begin();
 
-  // Abrimos comunicaciones seriales
+  // Abrimos comunicaciones para observar 
   Serial.begin(115200); 
 
   //Iniciamos los modulos en reset
@@ -85,16 +68,15 @@ void setup()
   digitalWrite(RST2,0);
   digitalWrite(M0,1);
   digitalWrite(M1,1);
-
-  //Seed para valor rand
-  srand(millis());
+  
 }
 
 void loop(void)
 { 
   uint8_t i = 0;
-
-  MODO = ( (digitalRead(SEL2)<<1) + digitalRead(SEL1) );        // Leemos el modo
+  boolean x= 0;
+  // Leemos el modo
+  MODO = ( (digitalRead(SEL2)<<1) + digitalRead(SEL1) );
   
   if (MODO_ANT != MODO){
     EnableDevice(MODO);         //Habilitamos el modulo según la posición de los jumpers
@@ -104,84 +86,102 @@ void loop(void)
 
   if (MODO==1 || MODO==2){
     // Enviamos un mensaje 
-    Serial.println("Start sending message"); 
+    
+    /*Serial.println("Start sending message"); 
     LoRa.beginPacket();
     LoRa.println(message_sent);
     LoRa.print("Message n° ");
     LoRa.println(counter);
     LoRa.endPacket();
-    Serial.println("Finish sending message"); 
-    Serial.println(""); 
-
+    //Prendemos el led por 0.5s
+    digitalWrite(LED,1);
+    delay(500);
+    digitalWrite(LED,0);
     counter++;
-    
+    delay(5000); */
+
     //Serial.print("Message sent: ");
     //Serial.println(message_sent);
     //Serial.print("Message n° ");
     //Serial.println(counter);
     //Serial.println(""); 
-    
-    LoRa.receive();                                     //Ponemos a Lora en modo de recepcion
-    delay((3+(rand() % 5))*1000);                      //Delay para evitar saturación de mensajes
-    while(i < 15){
-      Serial.println("Esperando mensaje");
+
+    //Ponemos a Lora en modo de recepcion
+    LoRa.receive();
+    //delay(3000);
+    while(i < 15 ){
       int packetSize = LoRa.parsePacket();
-      if (packetSize) {                                 //Si es que se ha recibido un paquete
-        Serial.print("Received packet: ");  
-        while (LoRa.available()) {                      //Leemos el mensaje
+      if (packetSize) {
+        // received a packet
+        Serial.print("Received packet '");
+
+        // read packet
+        while (LoRa.available()) {
           String LoRaData = LoRa.readString();
           Serial.print(LoRaData); 
         }
 
-        Serial.print("With RSSI: ");                    // Imprimimos el RSSI
+        // Imprimimos el RSSI
+        Serial.print("' with RSSI ");
         Serial.println(LoRa.packetRssi());
         Serial.println("");
-        
-        digitalWrite(LED,1);                            //Prendemos el led por 0.5s
+        //Prendemos el led por 0.5s
+        digitalWrite(LED,1);
         delay(500);
         digitalWrite(LED,0);
         break;
+      } else{
+        Serial.println("Esperando mensaje");
       }
-      delay(1000);
-      i++; 
-    }
-
-  } else if (MODO == 3){
-    char *Count = (char*)malloc(40);
-    sprintf(Count, "N°: %u, Msj: ", counter);
-  
-    //enviamos un mensaje
-    ResponseStatus rs = E32_433.sendMessage(strcat(Count, message_sent));
-    if (rs.getResponseDescription() == "Success"){
-      Serial.println("Mensaje enviado");
-      counter++;
-    } else {
-      Serial.println("Error al enviar");
-    }
-    free(Count);
-    Serial.println("");
-
-    delay((3+(rand() % 5))*1000);                     //Delay para evitar saturación de mensajes
-    //Esperamos a recibir un mensaje
-    while (i<15) {
-      //Serial.println("Esperando mensaje");
-      if (E32_433.available()  > 1){                            //Si hay un mensaje 
-        ResponseContainer rs = E32_433.receiveMessage();
-        if (rs.status.getResponseDescription() == "Success"){
-          Serial.print("Mensaje Recibido: ");
-          Serial.println(rs.data);
-        } else {
-          Serial.println("Error al recibir mensaje");
-        }
-
-        digitalWrite(LED,1);                          //Prendemos el led por 0.5s
-        delay(500);
-        digitalWrite(LED,0);
-        break;                                  
-      } 
       delay(1000);
       i++;
     }
+
+  } else if (MODO == 3){
+    //enviamos un mensaje
+    char *Count = (char*)malloc(40);
+    sprintf(Count, "N°: %u, Msj: ", counter);
+    sprintf(Count, "%u ", counter);
+    //enviamos un mensaje
+    //ResponseStatus rs = E32_433.sendMessage(strcat(Count, message_sent));
+    ResponseStatus rs = E32_433.sendMessage(Count);
+    if (rs.getResponseDescription() == "Success"){
+      Serial.println("Mensaje enviado");
+      Serial.println(Count);
+      counter++;
+      //Prendemos el led por 0.5s
+      digitalWrite(LED,1);
+      delay(500);
+      digitalWrite(LED,0);
+    }
+    free(Count);
+ 
+    Serial.println("");
+    delay(5000);
+    //Esperamos a recibir un mensaje
+    /*while (!x & i<20) {
+      Serial.println("Esperando mensaje");
+      if (E32_433.available()  > 1){
+        ResponseContainer rs = E32_433.receiveMessage();
+        String message = rs.data; // First ever get the data
+        //Serial.println(rs.status.getResponseDescription());
+        if (rs.status.getResponseDescription() == "Success"){
+          Serial.print("Mensaje Recibido: ");
+        }
+        Serial.println(message);
+        //Prendemos el led por 0.5s
+        digitalWrite(LED,1);
+        delay(500);
+        digitalWrite(LED,0);
+        x=1;
+      } 
+      delay(1000);
+      i++;
+      if (i==19){
+        Serial.println("No se recibio mensaje");
+      }
+    }*/
+
     Serial.println("");    
   }
   //delay(3000);
@@ -203,23 +203,23 @@ void Ini_module_spi(byte m)
     delay(500);
   }
 
-  LoRa.setSyncWord(LORA_SYNCWORD);              //Seteamos la dirección de sincronización
+  LoRa.setSyncWord(LORA_SYNCWORD);        //Seteamos la dirección de sincronización
   LoRa.setSpreadingFactor(LORA_SP);             //Seteamos el Spreading Factor (SP)
-  LoRa.setSignalBandwidth(LORA_BW);             //Seteamos El ancho de banda
-  LoRa.setCodingRate4(5);                       //Seteamos el Coding rate (4/(x-4))
-  LoRa.setPreambleLength(8);                    //Seteamos la longitud del preambulo (x+4)
+  LoRa.setSignalBandwidth(LORA_BW);         //Seteamos El ancho de banda
+  LoRa.setCodingRate4(5);                 //Seteamos el Coding rate (4/(x-4))
+  LoRa.setPreambleLength(8);              //Seteamos la longitud del preambulo (x+4)
 
 
   // Mensaje de comprobación
   Serial.println(F("Module configured finished"));
   Serial.println();
+
 }
 
 
 void Ini_module3(){
-  //Activamos el modo normal de operaciones
-  digitalWrite(M0,1);                                 
-  digitalWrite(M1,1);                         
+  digitalWrite(M0,1);
+  digitalWrite(M1,1);
   
   ResponseStructContainer c;
 	c = E32_433.getConfiguration();
@@ -231,7 +231,7 @@ void Ini_module3(){
 	printParameters(configuration);
 	configuration.ADDL = 0x0;
 	configuration.ADDH = 0x1;
-	configuration.CHAN = 0x17;                  //Canal 433
+	configuration.CHAN = 0x19;
 
 	configuration.OPTION.fec = FEC_1_ON;
 	configuration.OPTION.fixedTransmission = FT_TRANSPARENT_TRANSMISSION;
@@ -243,11 +243,10 @@ void Ini_module3(){
 	configuration.SPED.uartBaudRate = UART_BPS_9600;
 	configuration.SPED.uartParity = MODE_00_8N1;
 
-	// Seteamos la configuración para que no se guarde tras el apagado
+	// Set configuration changed and set to not hold the configuration
 	ResponseStatus rs = E32_433.setConfiguration(configuration, WRITE_CFG_PWR_DWN_LOSE);
 	Serial.println(rs.getResponseDescription());
 	Serial.println(rs.code);
-  
 	printParameters(configuration);
 	c.close();
 }

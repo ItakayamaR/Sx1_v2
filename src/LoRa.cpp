@@ -87,12 +87,14 @@ int LoRaClass::begin(long frequency)
 {
   // setup pins
   pinMode(_ss, OUTPUT);
-  // set SS high
   digitalWrite(_ss, HIGH);
 
-  if (_reset != -1) {
+  
+  
+  if (_reset!= -1) {
     pinMode(_reset, OUTPUT);
-
+    digitalWrite(_reset, HIGH);
+    delay(10);
     // perform reset
     digitalWrite(_reset, LOW);
     delay(10);
