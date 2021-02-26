@@ -197,7 +197,7 @@ void Ini_module_spi(byte m)
     LoRa.setPins(SCK, MISO, MOSI, SS2, RST2, DIO0_2);
   }
 
-  //Seteamos la frecuencia deseada y los canalies  y esperamos que se configure
+  //Seteamos la frecuencia deseada y los canales  y esperamos que se configure
   while (!LoRa.begin(LORA_CHANNEL)) {
     Serial.println(".");
     delay(500);

@@ -232,7 +232,7 @@ int LoRaClass::parsePacket(int size)
 
   //Serial.println(irqFlags); 
 
-  if ((irqFlags & IRQ_RX_DONE_MASK) && (irqFlags & IRQ_PAYLOAD_CRC_ERROR_MASK) == 0) {
+  if ((irqFlags & IRQ_RX_DONE_MASK) /*&& (irqFlags & IRQ_PAYLOAD_CRC_ERROR_MASK) == 0*/) {
     // received a packet
     _packetIndex = 0;
 
