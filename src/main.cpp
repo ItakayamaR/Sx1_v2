@@ -108,7 +108,6 @@ uint8_t send_message(uint8_t module, char *message, uint8_t seconds, boolean con
     LoRa.endPacket();
     digitalWrite(LED,0);
 
-
     Serial.print("Message sent: ");
     Serial.println(message);
     Serial.print("Message n° ");
@@ -141,14 +140,13 @@ uint8_t send_message(uint8_t module, char *message, uint8_t seconds, boolean con
     //sprintf(Count, "%u ", counter);
     //enviamos un mensaje
     digitalWrite(LED,1);
-    ResponseStatus rs = E32_433.sendMessage(Count);
+    ResponseStatus rs = E32_433.sendMessage(strcat(Count,message));
     digitalWrite(LED,0);
-    //ResponseStatus rs = E32_433.sendMessage(Count);
     if (rs.getResponseDescription() == "Success"){
       Serial.println("Messaje sent");
       Serial.println(message);
       Serial.print("Messaje N°: ");
-      Serial.println(Count);
+      Serial.println(counter);
       status=1;
     } else{
       Serial.println("Error");
