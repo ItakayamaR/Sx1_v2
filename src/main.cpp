@@ -20,6 +20,7 @@ byte MODO_ANT = 0;
 byte e;
 char message_received[100];
 char message_sent[]="hola";
+int delay_time=5;
 int counter=0;
 
 //Configuramos la clase para el módulo 3
@@ -30,13 +31,14 @@ void Ini_module3();
 void End_module3();
 void End_module_spi();
 void EnableDevice(byte m);
+uint8_t send_message(uint8_t module, char *message, uint8_t seconds, boolean control=false);
+uint8_t receive_message(uint8_t module, char seconds, boolean control=false);
 
 void setup()
 {
-  delay(100);
+  delay(10);
 
-
-    //Inicializamos los pines de LED y selección
+  //Inicializamos los pines de LED y selección
   pinMode(LED, OUTPUT);
   pinMode(SEL1, INPUT);
   pinMode(SEL2, INPUT);
@@ -73,8 +75,7 @@ void setup()
 
 void loop(void)
 { 
-  uint8_t i = 0;
-  boolean x= 0;
+  uint8_t status;
   // Leemos el modo
   MODO = ( (digitalRead(SEL2)<<1) + digitalRead(SEL1) );
   
@@ -84,107 +85,176 @@ void loop(void)
     counter=0;                  //Reiniciamos el contador
   }
 
-  if (MODO==1 || MODO==2){
-    // Enviamos un mensaje 
-    
-    /*Serial.println("Start sending message"); 
+  //status=send_message(MODO, message_sent, delay_time, true);
+  status=receive_message(MODO, 20, true);
+  //Serial.println(status);
+  delay(100);
+}
+
+uint8_t send_message(uint8_t module, char *message, uint8_t seconds, boolean control){
+  uint8_t status = 0;
+  uint8_t i = 0;
+  if (module==1 || module==2){
+    // Enviamos un mensaje   
+    Serial.println("Start sending message"); 
     LoRa.beginPacket();
-    LoRa.println(message_sent);
-    LoRa.print("Message n° ");
-    LoRa.println(counter);
-    LoRa.endPacket();
-    //Prendemos el led por 0.5s
+    //Prendemos el led
     digitalWrite(LED,1);
-    delay(500);
+    LoRa.print("N°: ");
+    LoRa.print(counter);
+    LoRa.print(" ");
+    LoRa.print("Msg: ");
+    LoRa.print(message);
+    LoRa.endPacket();
     digitalWrite(LED,0);
-    counter++;
-    delay(5000); */
 
-    //Serial.print("Message sent: ");
-    //Serial.println(message_sent);
-    //Serial.print("Message n° ");
-    //Serial.println(counter);
-    //Serial.println(""); 
 
-    //Ponemos a Lora en modo de recepcion
+    Serial.print("Message sent: ");
+    Serial.println(message);
+    Serial.print("Message n° ");
+    Serial.println(counter);
+    status=1;
+
+    if (control == true){
+      LoRa.receive();
+      for(i=0; i<10; i++) {
+        int packetSize = LoRa.parsePacket();
+        if (packetSize) {
+          Serial.print(".");
+          String LoRaData = LoRa.readString();
+          if (LoRaData=="OK"){
+            Serial.println("Message confirmed");
+            break;
+          }
+        } else {
+          Serial.println("Waiting for confirmation");
+        } 
+        delay(1000);
+        if (i==10) Serial.println("No confirmation");
+      }  
+    }  
+
+  } else if (module == 3){
+    //enviamos un mensaje
+    char *Count = (char*)malloc(40);
+    sprintf(Count, "N°: %u, Msg: ", counter);
+    //sprintf(Count, "%u ", counter);
+    //enviamos un mensaje
+    digitalWrite(LED,1);
+    ResponseStatus rs = E32_433.sendMessage(Count);
+    digitalWrite(LED,0);
+    //ResponseStatus rs = E32_433.sendMessage(Count);
+    if (rs.getResponseDescription() == "Success"){
+      Serial.println("Messaje sent");
+      Serial.println(message);
+      Serial.print("Messaje N°: ");
+      Serial.println(Count);
+      status=1;
+    } else{
+      Serial.println("Error");
+    }
+    free(Count); 
+
+    if(control == true){
+      for (i=0; i < 10; i++) {
+        if (E32_433.available() > 1){
+          ResponseContainer rs = E32_433.receiveMessage();
+          if (rs.status.getResponseDescription() == "Success"){
+            if (rs.data == "OK")
+            Serial.println("Message confirmed");
+            break;
+          } 
+        } else {
+            Serial.println("Waiting for confirmation");
+        }
+        delay(1000);
+        if (i==10) Serial.println("No confirmation");
+      } 
+    }
+  }
+  Serial.println(""); 
+  counter++;
+  delay(seconds*1000); 
+  return status;
+}
+
+uint8_t receive_message(uint8_t module, char seconds, boolean control){
+  uint8_t i=0;
+  uint8_t status=0;
+  if (module==1 || module==2){
     LoRa.receive();
-    //delay(3000);
-    while(i < 15 ){
+    //Esperamos a recibir un mensaje
+    while(i < seconds ){
       int packetSize = LoRa.parsePacket();
       if (packetSize) {
         // received a packet
-        Serial.print("Received packet '");
-
+        Serial.print("Received packet: '");
         // read packet
-        while (LoRa.available()) {
-          String LoRaData = LoRa.readString();
-          Serial.print(LoRaData); 
+        while (LoRa.available()) { 
+          Serial.print(LoRa.readString()); 
         }
 
         // Imprimimos el RSSI
         Serial.print("' with RSSI ");
         Serial.println(LoRa.packetRssi());
-        Serial.println("");
-        //Prendemos el led por 0.5s
-        digitalWrite(LED,1);
-        delay(500);
-        digitalWrite(LED,0);
-        break;
-      } else{
-        Serial.println("Esperando mensaje");
-      }
-      delay(1000);
-      i++;
-    }
-
-  } else if (MODO == 3){
-    //enviamos un mensaje
-    char *Count = (char*)malloc(40);
-    sprintf(Count, "N°: %u, Msj: ", counter);
-    sprintf(Count, "%u ", counter);
-    //enviamos un mensaje
-    //ResponseStatus rs = E32_433.sendMessage(strcat(Count, message_sent));
-    ResponseStatus rs = E32_433.sendMessage(Count);
-    if (rs.getResponseDescription() == "Success"){
-      Serial.println("Mensaje enviado");
-      Serial.println(Count);
-      counter++;
-      //Prendemos el led por 0.5s
-      digitalWrite(LED,1);
-      delay(500);
-      digitalWrite(LED,0);
-    }
-    free(Count);
- 
-    Serial.println("");
-    delay(5000);
-    //Esperamos a recibir un mensaje
-    /*while (!x & i<20) {
-      Serial.println("Esperando mensaje");
-      if (E32_433.available()  > 1){
-        ResponseContainer rs = E32_433.receiveMessage();
-        String message = rs.data; // First ever get the data
-        //Serial.println(rs.status.getResponseDescription());
-        if (rs.status.getResponseDescription() == "Success"){
-          Serial.print("Mensaje Recibido: ");
+        
+        if(control == true){
+          Serial.println("Sending confirmation"); 
+          LoRa.beginPacket();
+          LoRa.print("OK");
+          LoRa.endPacket();
         }
-        Serial.println(message);
+
         //Prendemos el led por 0.5s
         digitalWrite(LED,1);
         delay(500);
         digitalWrite(LED,0);
-        x=1;
-      } 
+
+        status=1;
+        break;
+
+      } else{
+        Serial.println("Waiting for message");
+      }
       delay(1000);
       i++;
-      if (i==19){
-        Serial.println("No se recibio mensaje");
-      }
-    }*/
+    }
 
-    Serial.println("");    
+  } else if (module == 3){
+    //Esperamos a recibir un mensaje
+    while (i < seconds) {
+      if (E32_433.available() > 1){
+        ResponseContainer rs = E32_433.receiveMessage();
+        if (rs.status.getResponseDescription() == "Success"){
+          Serial.print("Received packet: '");
+          Serial.println(rs.data);
+
+          //Enviamos confirmación
+          if (control==true){
+            Serial.println("Sending confirmation"); 
+            E32_433.sendMessage("OK");
+          }
+
+          //Prendemos el led por 0.5s
+          digitalWrite(LED,1);
+          delay(500);
+          digitalWrite(LED,0);
+          status=1;
+          break;
+        } 
+      } else {
+          Serial.println("Waiting for message");
+      }
+      delay(1000);
+      i++;
+    }
+
+    
+    Serial.println(""); 
   }
-  //delay(3000);
+  if (status == 0) { Serial.println("No message received"); }
+  Serial.println("");
+  return status;
 }
 
 void Ini_module_spi(byte m) 

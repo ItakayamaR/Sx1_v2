@@ -185,10 +185,11 @@ int LoRaClass::endPacket(bool async)
     // wait for TX done
     while ((readRegister(REG_IRQ_FLAGS) & IRQ_TX_DONE_MASK) == 0) 
     {
+      //Serial.print(".");
       //Serial.println(readRegister(REG_IRQ_FLAGS));
       //Serial.println(readRegister(REG_OP_MODE));
       //Serial.println("Sending message");
-      yield();
+      //yield();
       //delay(1000);
     }
     
