@@ -84,9 +84,12 @@ void loop(void)
     MODO_ANT=MODO;
     counter=0;                  //Reiniciamos el contador
   }
-
-  //status=send_message(MODO, message_sent, delay_time, true);
+  
+  //Comentar o descomentar para los módulos en modo de transmisión/recepción
+  //status=send_message(MODO, message_sent, delay_time, true); (Modulo de emision, mensaje a enviar, delay entre mensajes, con/sin mensaje de confirmación)
   status=receive_message(MODO, 20, true);
+
+
   //Serial.println(status);
   delay(100);
 }
@@ -97,14 +100,17 @@ uint8_t send_message(uint8_t module, char *message, uint8_t seconds, boolean con
   if (module==1 || module==2){
     // Enviamos un mensaje   
     Serial.println("Start sending message"); 
-    LoRa.beginPacket();
-    //Prendemos el led
+     //Prendemos el led
     digitalWrite(LED,1);
+    LoRa.beginPacket();
+    /*
     LoRa.print("N°: ");
     LoRa.print(counter);
     LoRa.print(" ");
     LoRa.print("Msg: ");
-    LoRa.print(message);
+    LoRa.print(message);*/
+
+    LoRa.print("A");
     LoRa.endPacket();
     digitalWrite(LED,0);
 
@@ -137,7 +143,8 @@ uint8_t send_message(uint8_t module, char *message, uint8_t seconds, boolean con
     //enviamos un mensaje
     char *Count = (char*)malloc(40);
     sprintf(Count, "N°: %u, Msg: ", counter);
-    //sprintf(Count, "%u ", counter);
+
+
     //enviamos un mensaje
     digitalWrite(LED,1);
     ResponseStatus rs = E32_433.sendMessage(strcat(Count,message));

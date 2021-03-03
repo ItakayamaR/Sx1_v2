@@ -179,7 +179,7 @@ int LoRaClass::endPacket(bool async)
   }
   // put in TX mode 
   writeRegister(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_TX);
-  delay(500);
+  //delay(500);
 
   if (!async) {
     // wait for TX done
