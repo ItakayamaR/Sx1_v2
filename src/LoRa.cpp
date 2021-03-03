@@ -87,12 +87,14 @@ int LoRaClass::begin(long frequency)
 {
   // setup pins
   pinMode(_ss, OUTPUT);
-  // set SS high
   digitalWrite(_ss, HIGH);
 
-  if (_reset != -1) {
+  
+  
+  if (_reset!= -1) {
     pinMode(_reset, OUTPUT);
-
+    digitalWrite(_reset, HIGH);
+    delay(10);
     // perform reset
     digitalWrite(_reset, LOW);
     delay(10);
@@ -177,16 +179,17 @@ int LoRaClass::endPacket(bool async)
   }
   // put in TX mode 
   writeRegister(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_TX);
-  delay(500);
+  //delay(500);
 
   if (!async) {
     // wait for TX done
     while ((readRegister(REG_IRQ_FLAGS) & IRQ_TX_DONE_MASK) == 0) 
     {
+      //Serial.print(".");
       //Serial.println(readRegister(REG_IRQ_FLAGS));
       //Serial.println(readRegister(REG_OP_MODE));
       //Serial.println("Sending message");
-      yield();
+      //yield();
       //delay(1000);
     }
     
@@ -230,7 +233,7 @@ int LoRaClass::parsePacket(int size)
 
   //Serial.println(irqFlags); 
 
-  if ((irqFlags & IRQ_RX_DONE_MASK) && (irqFlags & IRQ_PAYLOAD_CRC_ERROR_MASK) == 0) {
+  if ((irqFlags & IRQ_RX_DONE_MASK) /*&& (irqFlags & IRQ_PAYLOAD_CRC_ERROR_MASK) == 0*/) {
     // received a packet
     _packetIndex = 0;
 
