@@ -1,5 +1,5 @@
-# SxV2
-Codigo para pruebas de modulos Lora
+# Sx1_v2
+Codigo para pruebas de modulos Lora.
 Para modificar el SP(Spreading factor), BW(Bandwith), CR(code Rate), el canal y la longitud de preámbulo, cambiar las definiciones al inicio del programa. (Funciona para los módulos 1 y 2)
 
 Para cambiar entre transmisión, recepción, comentar y descomentar la linea respectiva en la función Loop.
