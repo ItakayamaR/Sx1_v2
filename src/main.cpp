@@ -7,10 +7,12 @@
 
 
 //Definiciones para la libreria
-#define LORA_BW               125E3
-#define LORA_SP               12
-#define LORA_CHANNEL          915E6
-#define LORA_SYNCWORD         0x12
+#define LORA_BW               125E3         //Bandwith
+#define LORA_SP               7             //Spreading Factor
+#define LORA_CHANNEL          915E6         //Canal
+#define LORA_SYNCWORD         0x12          
+#define LORA_CR               5             //Coding rate (4/x)
+#define LORA_PL               8             //Preamble length (x+4)
 #define LORA_ADDRESS          4
 #define LORA_SEND_TO_ADDRESS  2
 
@@ -71,6 +73,14 @@ void setup()
   digitalWrite(M0,1);
   digitalWrite(M1,1);
   
+  //Imprimimos configuraciones actuales
+  Serial.print("BW: ");
+  Serial.println(LORA_BW);
+  Serial.print("SP: ");
+  Serial.println(LORA_SP);
+  Serial.print("CR: 4/");
+  Serial.println(LORA_CR);
+  
 }
 
 void loop(void)
@@ -86,8 +96,8 @@ void loop(void)
   }
   
   //Comentar o descomentar para los módulos en modo de transmisión/recepción
-  //status=send_message(MODO, message_sent, delay_time, true); (Modulo de emision, mensaje a enviar, delay entre mensajes, con/sin mensaje de confirmación)
-  status=receive_message(MODO, 20, true);
+  status=send_message(MODO, message_sent, delay_time, true); //(Modulo de emision, mensaje a enviar, delay entre mensajes, con/sin mensaje de confirmación)
+  //status=receive_message(MODO, 20, true);
 
 
   //Serial.println(status);
@@ -103,12 +113,12 @@ uint8_t send_message(uint8_t module, char *message, uint8_t seconds, boolean con
      //Prendemos el led
     digitalWrite(LED,1);
     LoRa.beginPacket();
-    /*
+    
     LoRa.print("N°: ");
     LoRa.print(counter);
     LoRa.print(" ");
     LoRa.print("Msg: ");
-    LoRa.print(message);*/
+    LoRa.print(message);
 
     LoRa.print("A");
     LoRa.endPacket();
@@ -124,8 +134,8 @@ uint8_t send_message(uint8_t module, char *message, uint8_t seconds, boolean con
       LoRa.receive();
       for(i=0; i<10; i++) {
         int packetSize = LoRa.parsePacket();
+        LoRa.receive();
         if (packetSize) {
-          Serial.print(".");
           String LoRaData = LoRa.readString();
           if (LoRaData=="OK"){
             Serial.println("Message confirmed");
@@ -134,8 +144,8 @@ uint8_t send_message(uint8_t module, char *message, uint8_t seconds, boolean con
         } else {
           Serial.println("Waiting for confirmation");
         } 
-        delay(1000);
         if (i==10) Serial.println("No confirmation");
+        delay(1000);
       }  
     }  
 
@@ -191,8 +201,11 @@ uint8_t receive_message(uint8_t module, char seconds, boolean control){
     //Esperamos a recibir un mensaje
     while(i < seconds ){
       int packetSize = LoRa.parsePacket();
+      LoRa.receive();
       if (packetSize) {
         // received a packet
+        Serial.print("N° of bytes received: ");
+        Serial.println(packetSize);
         Serial.print("Received packet: '");
         // read packet
         while (LoRa.available()) { 
@@ -200,10 +213,11 @@ uint8_t receive_message(uint8_t module, char seconds, boolean control){
         }
 
         // Imprimimos el RSSI
-        Serial.print("' with RSSI ");
+        Serial.print("' with RSSI: ");
         Serial.println(LoRa.packetRssi());
         
         if(control == true){
+          delay(1000);
           Serial.println("Sending confirmation"); 
           LoRa.beginPacket();
           LoRa.print("OK");
@@ -278,11 +292,11 @@ void Ini_module_spi(byte m)
     delay(500);
   }
 
-  LoRa.setSyncWord(LORA_SYNCWORD);        //Seteamos la dirección de sincronización
+  LoRa.setSyncWord(LORA_SYNCWORD);              //Seteamos la dirección de sincronización
   LoRa.setSpreadingFactor(LORA_SP);             //Seteamos el Spreading Factor (SP)
-  LoRa.setSignalBandwidth(LORA_BW);         //Seteamos El ancho de banda
-  LoRa.setCodingRate4(5);                 //Seteamos el Coding rate (4/(x-4))
-  LoRa.setPreambleLength(8);              //Seteamos la longitud del preambulo (x+4)
+  LoRa.setSignalBandwidth(LORA_BW);             //Seteamos El ancho de banda
+  LoRa.setCodingRate4(LORA_CR);                 //Seteamos el Coding rate (4/(x-4))
+  LoRa.setPreambleLength(LORA_PL);              //Seteamos la longitud del preambulo (x+4)
 
 
   // Mensaje de comprobación
