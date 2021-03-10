@@ -5,4 +5,4 @@ Para modificar el SP(Spreading factor), BW(Bandwith), CR(code Rate), el canal y 
 
 10/03/2021
 - Se arreglaron las funciones de enviar y recibir. Ahora la recepción es continua y funciona con cualquier BW y SP-
-- Se agregó una función de 
+- Se agregó un mensaje de ack, para verificar la recepción de datos
