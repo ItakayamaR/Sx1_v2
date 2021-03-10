@@ -23,6 +23,7 @@
 #define REG_RSSI_VALUE           0x1b
 #define REG_MODEM_CONFIG_1       0x1d
 #define REG_MODEM_CONFIG_2       0x1e
+#define REG_SYMB_TIMEOUT_LSB     0x1f
 #define REG_PREAMBLE_MSB         0x20
 #define REG_PREAMBLE_LSB         0x21
 #define REG_PAYLOAD_LENGTH       0x22
@@ -233,7 +234,7 @@ int LoRaClass::parsePacket(int size)
 
   //Serial.println(irqFlags); 
 
-  if ((irqFlags & IRQ_RX_DONE_MASK) /*&& (irqFlags & IRQ_PAYLOAD_CRC_ERROR_MASK) == 0*/) {
+  if ((irqFlags & IRQ_RX_DONE_MASK) && (irqFlags & IRQ_PAYLOAD_CRC_ERROR_MASK) == 0) {
     // received a packet
     _packetIndex = 0;
 
