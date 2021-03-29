@@ -8,10 +8,10 @@
 
 //Definiciones para la libreria
 #define LORA_BW               125E3         //Bandwith
-#define LORA_SP               7             //Spreading Factor
+#define LORA_SP               9             //Spreading Factor
 #define LORA_CHANNEL          915E6         //Canal
-#define LORA_SYNCWORD         0x12          
-#define LORA_CR               5             //Coding rate (4/x)
+#define LORA_SYNCWORD         0x34          
+#define LORA_CR               8             //Coding rate (4/x)
 #define LORA_PL               8             //Preamble length (x+4)
 #define LORA_ADDRESS          4
 #define LORA_SEND_TO_ADDRESS  2
@@ -96,10 +96,12 @@ void loop(void)
   }
   
   //Comentar o descomentar para los módulos en modo de transmisión/recepción
-  status=send_message(MODO, message_sent, delay_time, true); //(Modulo de emision, mensaje a enviar, delay entre mensajes, con/sin mensaje de confirmación)
-  //status=receive_message(MODO, 20, true);
+  status=send_message(MODO, message_sent, delay_time, false); //(Modulo de emision, mensaje a enviar, delay entre mensajes, con/sin mensaje de confirmación)
+  //status=receive_message(MODO, 20, false);
+  //LoRa.enableInvertIQ();
+  //LoRa.disableInvertIQ();
 
-
+  LoRa.enableCrc();
   //Serial.println(status);
   delay(100);
 }
@@ -114,13 +116,14 @@ uint8_t send_message(uint8_t module, char *message, uint8_t seconds, boolean con
     digitalWrite(LED,1);
     LoRa.beginPacket();
     
-    LoRa.print("N°: ");
+    /*LoRa.print("N°: ");
     LoRa.print(counter);
     LoRa.print(" ");
     LoRa.print("Msg: ");
-    LoRa.print(message);
+    LoRa.print(message);*/
 
-    LoRa.print("A");
+    LoRa.print("abde");
+    //LoRa.write(81);
     LoRa.endPacket();
     digitalWrite(LED,0);
 

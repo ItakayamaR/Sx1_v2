@@ -170,6 +170,8 @@ int LoRaClass::beginPacket(int implicitHeader)
   writeRegister(REG_FIFO_ADDR_PTR, 0);
   writeRegister(REG_PAYLOAD_LENGTH, 0);
 
+  Serial.println(readRegister(REG_MODEM_CONFIG_2) & 0x07);
+
   return 1;
 }
 
@@ -234,10 +236,10 @@ int LoRaClass::parsePacket(int size)
 
   //Serial.println(irqFlags); 
 
-  if ((irqFlags & IRQ_RX_DONE_MASK) && (irqFlags & IRQ_PAYLOAD_CRC_ERROR_MASK) == 0) {
+  if ((irqFlags & IRQ_RX_DONE_MASK) /*&& (irqFlags & IRQ_PAYLOAD_CRC_ERROR_MASK) == 0*/) {
     // received a packet
     _packetIndex = 0;
-
+    Serial.println(irqFlags & IRQ_PAYLOAD_CRC_ERROR_MASK);
     // read packet length
     if (_implicitHeaderMode) {
       packetLength = readRegister(REG_PAYLOAD_LENGTH);
