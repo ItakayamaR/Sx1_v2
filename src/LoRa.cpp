@@ -413,9 +413,9 @@ void LoRaClass::receive(int size)
     writeRegister(REG_PAYLOAD_LENGTH, size & 0xff);
   } else {
     explicitHeaderMode();
-  }
-
+  }  
   writeRegister(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_RX_CONTINUOUS);
+  delay(10);
 }
 #endif
 
