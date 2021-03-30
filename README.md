@@ -4,6 +4,10 @@ Para modificar el SP(Spreading factor), BW(Bandwith), CR(code Rate), el canal y 
 
 Para cambiar entre transmisión, recepción, comentar y descomentar la linea respectiva en la función Loop.
 
+30/03/2021 (V2.5)
+- Se agregó un error en la recepción de mensajes, que hacía que algunos se perdieran a velocidades elevadas
+- Se agregó una versión de prueba para el gateway Lora
+
 10/03/2021 (V2.4)
 - Se arreglaron las funciones de enviar y recibir. Ahora la recepción es continua y funciona con cualquier BW y SP-
 - Se agregó un mensaje de ack, para verificar la recepción de datos
