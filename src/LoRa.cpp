@@ -219,6 +219,7 @@ bool LoRaClass::isTransmitting()
 
 int LoRaClass::parsePacket(int size)
 {
+  int LoRaMode= readRegister(REG_OP_MODE);
   int packetLength = 0;
   int irqFlags = readRegister(REG_IRQ_FLAGS);
 
@@ -252,7 +253,9 @@ int LoRaClass::parsePacket(int size)
 
     // put in standby mode
     idle();
-  } else if (readRegister(REG_OP_MODE) != (MODE_LONG_RANGE_MODE | MODE_RX_SINGLE)) {
+  } else if ( LoRaMode != (MODE_LONG_RANGE_MODE | MODE_RX_SINGLE) && LoRaMode != (MODE_LONG_RANGE_MODE | MODE_RX_CONTINUOUS)) {
+    Serial.println("El estado del módulo es: ");
+    Serial.print(LoRaMode);
     // not currently in RX mode
 
     // reset FIFO address
