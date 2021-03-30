@@ -9,7 +9,7 @@
 //Definiciones para la libreria
 #define LORA_BW               125E3         //Bandwith
 #define LORA_SP               9             //Spreading Factor
-#define LORA_CHANNEL          915E6         //Canal
+#define LORA_CHANNEL          917E6         //Canal
 #define LORA_SYNCWORD         0x34          
 #define LORA_CR               8             //Coding rate (4/x)
 #define LORA_PL               8             //Preamble length (x+4)
