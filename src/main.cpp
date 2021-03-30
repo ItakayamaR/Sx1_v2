@@ -134,7 +134,6 @@ uint8_t send_message(uint8_t module, char *message, uint8_t seconds, boolean con
       LoRa.receive();
       for(i=0; i<10; i++) {
         int packetSize = LoRa.parsePacket();
-        LoRa.receive();
         if (packetSize) {
           String LoRaData = LoRa.readString();
           if (LoRaData=="OK"){
@@ -201,7 +200,6 @@ uint8_t receive_message(uint8_t module, char seconds, boolean control){
     //Esperamos a recibir un mensaje
     while(i < seconds ){
       int packetSize = LoRa.parsePacket();
-      LoRa.receive();
       if (packetSize) {
         // received a packet
         Serial.print("N° of bytes received: ");
