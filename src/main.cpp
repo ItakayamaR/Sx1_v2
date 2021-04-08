@@ -166,9 +166,9 @@ uint8_t send_message(uint8_t module, char *message, uint8_t seconds, boolean con
     ResponseStatus rs = E32_433.sendMessage(strcat(Count,message));
     digitalWrite(LED,0);
     if (rs.getResponseDescription() == "Success"){
-      Serial.println("Messaje sent");
+      Serial.println("Message sent");
       Serial.println(message);
-      Serial.print("Messaje N°: ");
+      Serial.print("Message N°: ");
       Serial.println(counter);
       status=1;
     } else{
