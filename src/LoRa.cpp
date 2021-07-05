@@ -224,7 +224,6 @@ int LoRaClass::parsePacket(int size)
   //Serial.println("Llega aqui"); 
   if (size > 0) {
     implicitHeaderMode();
-
     writeRegister(REG_PAYLOAD_LENGTH, size & 0xff);
   } else {
     explicitHeaderMode();
@@ -232,7 +231,6 @@ int LoRaClass::parsePacket(int size)
 
   // clear IRQ's
   writeRegister(REG_IRQ_FLAGS, irqFlags);
-
   //Serial.println(irqFlags); 
 
   if ((irqFlags & IRQ_RX_DONE_MASK) && (irqFlags & IRQ_PAYLOAD_CRC_ERROR_MASK) == 0) {
@@ -251,11 +249,11 @@ int LoRaClass::parsePacket(int size)
 
     // put in standby mode
     idle();
+    
   } else if ( LoRaMode != (MODE_LONG_RANGE_MODE | MODE_RX_SINGLE) && LoRaMode != (MODE_LONG_RANGE_MODE | MODE_RX_CONTINUOUS)) {
     Serial.println("El estado del módulo es: ");
     Serial.print(LoRaMode);
     // not currently in RX mode or RX continuous
-    
     idle();  //Ponemos en idle para configurar
 
     // reset FIFO address
@@ -409,15 +407,13 @@ void LoRaClass::receive(int size)
 
   if (size > 0) {
     implicitHeaderMode();
-
     writeRegister(REG_PAYLOAD_LENGTH, size & 0xff);
   } else {
     explicitHeaderMode();
   }
 
   writeRegister(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_RX_CONTINUOUS);
-  //Delay para esperar que se actualice el modo
-  delay(100);
+  
   //Serial.println(readRegister(REG_OP_MODE));
 }
 #endif
@@ -698,7 +694,6 @@ void LoRaClass::explicitHeaderMode()
 void LoRaClass::implicitHeaderMode()
 {
   _implicitHeaderMode = 1;
-
   writeRegister(REG_MODEM_CONFIG_1, readRegister(REG_MODEM_CONFIG_1) | 0x01);
 }
 
@@ -741,6 +736,8 @@ uint8_t LoRaClass::readRegister(uint8_t address)
 void LoRaClass::writeRegister(uint8_t address, uint8_t value)
 {
   singleTransfer(address | 0x80, value);
+  //Delay para esperar que se actualice el modo
+  delay(100);
 }
 
 uint8_t LoRaClass::singleTransfer(uint8_t address, uint8_t value)
