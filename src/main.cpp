@@ -18,10 +18,16 @@
 #define LORA_PL               8               //Preamble length (x+4)
 #define LORA_PW               POWER_30        //Potencia de transmisión (POWER_30, POWER_27, POWER_24, POWER_21)
 
+//Constantes para la transmisión WIFI
+const char* ssid = "Isma";
+const char* password = "12345678";
+const String hostname = "ESP32_LORA";
+
+
 byte e;
 char message_received[100];
 char message_sent[]="hola";
-int delay_time=5;
+int delay_time=1;
 int counter=0;
 
 //Configuramos la clase para el módulo 3
@@ -39,7 +45,7 @@ void setup()
   Serial.begin(115200); 
 
   //Configuramos programación vía OTA
-  void wifi_config(void);
+  wifi_config();
 
   //Inicializamos los pines de LED 
   pinMode(LED, OUTPUT);
@@ -65,12 +71,13 @@ void setup()
 
 void loop(void)
 { 
-  ArduinoOTA.handle();
+  //
+  ArduinoOTA.handle();  
   
   uint8_t status;
   //Comentar o descomentar para los módulos en modo de transmisión/recepción
   status=send_message(message_sent, delay_time, false); //(Modulo de emision, mensaje a enviar, delay entre mensajes, con/sin mensaje de confirmación)
-  //status=receive_message(20, true);
+  //status=receive_message(20, false);
 
   //Serial.println(status);
   delay(100);
@@ -83,7 +90,7 @@ uint8_t send_message(char *message, uint8_t seconds, boolean control){
   //Construimos un mensaje
   char *Count = (char*)malloc(40);
   sprintf(Count, "N°: %u, Msg:  %s", counter, message);
-  Serial.println(Count);
+  //Serial.println(Count);
 
   //enviamos un mensaje
   digitalWrite(LED,1);

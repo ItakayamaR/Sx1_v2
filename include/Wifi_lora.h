@@ -5,11 +5,9 @@
 #include <Arduino.h>
 #include <ArduinoOTA.h>
 
+extern const char* ssid;
+extern const char* password;
 
-const char* ssid = "Isma";
-const char* password = "12345678";
-
-String hostname = "ESP32_E32";
-
+extern const String hostname;
 
 void wifi_config(void);
