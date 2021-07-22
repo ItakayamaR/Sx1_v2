@@ -1,3 +1,7 @@
+/*
+  Manual: https://www.ebyte.com/en/product-view-news.aspx?id=108
+*/
+
 #include <Arduino.h>
 #include <SPI.h>
 #include <stdio.h>
@@ -7,17 +11,13 @@
 
 
 //Definiciones para la libreria
-#define LORA_BW               125E3         //Bandwith
-#define LORA_SP               7             //Spreading Factor
-#define LORA_CHANNEL          915E6         //Canal
+#define LORA_BW               125E3           //Bandwith
+#define LORA_SP               7               //Spreading Factor
+#define LORA_CHANNEL          915E6           //Canal
 #define LORA_SYNCWORD         0x12          
-#define LORA_CR               5             //Coding rate (4/x)
-#define LORA_PL               8             //Preamble length (x+4)
-#define LORA_ADDRESS          4
-#define LORA_SEND_TO_ADDRESS  2
-
-byte MODO = 0;
-byte MODO_ANT = 0;
+#define LORA_CR               5               //Coding rate (4/x)
+#define LORA_PL               8               //Preamble length (x+4)
+#define LORA_PW               POWER_30        //Potencia de transmisión (POWER_30, POWER_27, POWER_24, POWER_21)
 
 byte e;
 char message_received[100];
@@ -29,10 +29,8 @@ int counter=0;
 LoRa_E32 E32_433(RX, TX, &Serial1, AUX, M0, M1);  // e32 TX e32 RX 
 
 void Ini_module3();
-void End_module3();
-void EnableDevice(void);
-uint8_t send_message(uint8_t module, char *message, uint8_t seconds, boolean control=false);
-uint8_t receive_message(uint8_t module, char seconds, boolean control=false);
+uint8_t send_message(char *message, uint8_t seconds, boolean control=false);
+uint8_t receive_message(char seconds, boolean control=false);
 
 void setup()
 {
@@ -59,35 +57,32 @@ void setup()
   Serial.print("CR: 4/");
   Serial.println(LORA_CR);
 
-  EnableDevice();
+  Ini_module3(); 
 }
 
 void loop(void)
 { 
   uint8_t status;
-  
-
   //Comentar o descomentar para los módulos en modo de transmisión/recepción
-  //status=send_message(MODO, message_sent, delay_time, false); //(Modulo de emision, mensaje a enviar, delay entre mensajes, con/sin mensaje de confirmación)
-  status=receive_message(MODO, 20, true);
-
+  status=send_message(message_sent, delay_time, false); //(Modulo de emision, mensaje a enviar, delay entre mensajes, con/sin mensaje de confirmación)
+  //status=receive_message(20, true);
 
   //Serial.println(status);
   delay(100);
 }
 
-uint8_t send_message(uint8_t module, char *message, uint8_t seconds, boolean control){
+uint8_t send_message(char *message, uint8_t seconds, boolean control){
   uint8_t status = 0;
   uint8_t i = 0;
 
-  //enviamos un mensaje
+  //Construimos un mensaje
   char *Count = (char*)malloc(40);
-  sprintf(Count, "N°: %u, Msg: ", counter);
-
+  sprintf(Count, "N°: %u, Msg:  %s", counter, message);
+  Serial.println(Count);
 
   //enviamos un mensaje
   digitalWrite(LED,1);
-  ResponseStatus rs = E32_433.sendMessage(strcat(Count,message));
+  ResponseStatus rs = E32_433.sendMessage(Count);
   digitalWrite(LED,0);
   Serial.println(rs.getResponseDescription());
   if (rs.getResponseDescription() == "Success"){
@@ -124,7 +119,7 @@ uint8_t send_message(uint8_t module, char *message, uint8_t seconds, boolean con
   return status;
 }
 
-uint8_t receive_message(uint8_t module, char seconds, boolean control){
+uint8_t receive_message(char seconds, boolean control){
   uint8_t i=0;
   uint8_t status=0;
 
@@ -185,7 +180,7 @@ void Ini_module3(){
 	configuration.OPTION.fec = FEC_1_ON;
 	configuration.OPTION.fixedTransmission = FT_TRANSPARENT_TRANSMISSION;
 	configuration.OPTION.ioDriveMode = IO_D_MODE_PUSH_PULLS_PULL_UPS;
-	configuration.OPTION.transmissionPower = POWER_30;
+	configuration.OPTION.transmissionPower = LORA_PW;
 	configuration.OPTION.wirelessWakeupTime = WAKE_UP_1250;
 
 	configuration.SPED.airDataRate = AIR_DATA_RATE_000_03;
@@ -201,11 +196,3 @@ void Ini_module3(){
 	c.close();
 }
 
-
-
-void EnableDevice(void){
-
-  Serial.println("modo 3");
-  Ini_module3(); 
-
-}
