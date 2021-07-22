@@ -21,13 +21,13 @@
 //Constantes para la transmisión WIFI
 const char* ssid = "Isma";
 const char* password = "12345678";
-const String hostname = "ESP32_LORA";
+const String hostname = "ESP32_E32";
 
 
 byte e;
 char message_received[100];
 char message_sent[]="hola";
-int delay_time=1;
+int delay_time=5;
 int counter=0;
 
 //Configuramos la clase para el módulo 3
@@ -76,8 +76,8 @@ void loop(void)
   
   uint8_t status;
   //Comentar o descomentar para los módulos en modo de transmisión/recepción
-  //status=send_message(message_sent, delay_time, false); //(Modulo de emision, mensaje a enviar, delay entre mensajes, con/sin mensaje de confirmación)
-  status=receive_message(20, false);
+  status=send_message(message_sent, delay_time, false); //(Modulo de emision, mensaje a enviar, delay entre mensajes, con/sin mensaje de confirmación)
+  //status=receive_message(20, false);
 
   //Serial.println(status);
   delay(100);
@@ -127,7 +127,10 @@ uint8_t send_message(char *message, uint8_t seconds, boolean control){
   }
   Serial.println(""); 
   counter++;
-  delay(seconds*1000); 
+  for (i=0; i < seconds; i++){
+    ArduinoOTA.handle();
+    delay(1000);
+  }  
   return status;
 }
 
