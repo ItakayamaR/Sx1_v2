@@ -249,10 +249,10 @@ int LoRaClass::parsePacket(int size)
 
     // put in standby mode
     idle();
-    
+
   } else if ( LoRaMode != (MODE_LONG_RANGE_MODE | MODE_RX_SINGLE) && LoRaMode != (MODE_LONG_RANGE_MODE | MODE_RX_CONTINUOUS)) {
     Serial.println("El estado del módulo es: ");
-    Serial.print(LoRaMode);
+    Serial.print(LoRaMode); 
     // not currently in RX mode or RX continuous
     idle();  //Ponemos en idle para configurar
 
