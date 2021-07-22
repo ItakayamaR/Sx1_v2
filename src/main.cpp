@@ -7,8 +7,7 @@
 #include <stdio.h>
 #include "Pines.h"
 #include "LoRa_E32.h"
-#include "LoRa.h"
-
+#include "Wifi_lora.h"
 
 //Definiciones para la libreria
 #define LORA_BW               125E3           //Bandwith
@@ -36,14 +35,18 @@ void setup()
 {
   delay(10);
 
+  // Abrimos comunicaciones para observar 
+  Serial.begin(115200); 
+
+  //Configuramos programación vía OTA
+  void wifi_config(void);
+
   //Inicializamos los pines de LED 
   pinMode(LED, OUTPUT);
 
   //Iniciamos comunicación para el Módulo 3
   E32_433.begin();
 
-  // Abrimos comunicaciones para observar 
-  Serial.begin(115200); 
 
   //Iniciamos los modulos en reset
   digitalWrite(M0,1);
@@ -62,6 +65,8 @@ void setup()
 
 void loop(void)
 { 
+  ArduinoOTA.handle();
+  
   uint8_t status;
   //Comentar o descomentar para los módulos en modo de transmisión/recepción
   status=send_message(message_sent, delay_time, false); //(Modulo de emision, mensaje a enviar, delay entre mensajes, con/sin mensaje de confirmación)
