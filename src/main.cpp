@@ -76,8 +76,8 @@ void loop(void)
   
   uint8_t status;
   //Comentar o descomentar para los módulos en modo de transmisión/recepción
-  status=send_message(message_sent, delay_time, false); //(Modulo de emision, mensaje a enviar, delay entre mensajes, con/sin mensaje de confirmación)
-  //status=receive_message(20, false);
+  //status=send_message(message_sent, delay_time, false); //(Modulo de emision, mensaje a enviar, delay entre mensajes, con/sin mensaje de confirmación)
+  status=receive_message(20, false);
 
   //Serial.println(status);
   delay(100);
