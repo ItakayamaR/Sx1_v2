@@ -22,6 +22,8 @@
 const char* ssid = "Isma";
 const char* password = "12345678";
 const String hostname = "ESP32_E32";
+unsigned long previousMillis = 0;
+unsigned long interval = 30000;
 
 
 byte e;
@@ -73,6 +75,16 @@ void loop(void)
 { 
   //
   ArduinoOTA.handle();  
+  
+  unsigned long currentMillis = millis();
+  // if WiFi is down, try reconnecting every CHECK_WIFI_TIME seconds
+  if ((WiFi.status() != WL_CONNECTED) && (currentMillis - previousMillis >=interval)) {
+    Serial.print(millis());
+    Serial.println("Reconnecting to WiFi...");
+    WiFi.disconnect();
+    WiFi.reconnect();
+    previousMillis = currentMillis;
+  }
   
   uint8_t status;
   //Comentar o descomentar para los módulos en modo de transmisión/recepción
