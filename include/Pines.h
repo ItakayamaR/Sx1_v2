@@ -1,6 +1,6 @@
-/*! 
+/* 
     Pines usados para la comunicación con los módulos Lora
- */
+*/
 
 //Definimos pines para la comunicación SPI
 #define MISO 12         

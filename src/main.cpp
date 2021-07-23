@@ -2,7 +2,7 @@
 #include <SPI.h>
 #include <stdio.h>
 #include "Pines.h"
-#include "LoRa_E32.h"
+#include "Wifi_lora.h"
 #include "LoRa.h"
 
 //Definiciones para la libreria
@@ -14,6 +14,13 @@
 #define LORA_PL               8             //Preamble length (x+4)
 #define LORA_PW               20            //Potencia de transmisión (dBm)
 
+
+//Constantes para la conexion WIFI
+const char* ssid = "Isma";
+const char* password = "12345678";
+const String hostname = "ESP32_RFM95";
+unsigned long previousMillis = 0;
+unsigned long interval = 30000;
 
 byte e;
 char message_received[100];
@@ -33,6 +40,9 @@ void setup()
 
   //Inicializamos el pin de led
   pinMode(LED, OUTPUT);
+
+  //Inicializamos conf OTA
+  wifi_config();
 
   //Inicializamos pines del módulo 1
   pinMode(DIO0_1, INPUT);
@@ -64,10 +74,21 @@ void setup()
 void loop(void)
 { 
   uint8_t status;
-  
+  ArduinoOTA.handle();
+
+  unsigned long currentMillis = millis();
+  // if WiFi is down, try reconnecting every CHECK_WIFI_TIME seconds
+  if ((WiFi.status() != WL_CONNECTED) && (currentMillis - previousMillis >=interval)) {
+    Serial.print(millis());
+    Serial.println("Reconnecting to WiFi...");
+    WiFi.disconnect();
+    WiFi.reconnect();
+    previousMillis = currentMillis;
+  }
+
   //Comentar o descomentar para los módulos en modo de transmisión/recepción
-  //status=send_message(message_sent, delay_time, false); //(Modulo de emision, mensaje a enviar, delay entre mensajes, con/sin mensaje de confirmación)
-  status=receive_message(20, false);
+  status=send_message(message_sent, delay_time, false); //(Modulo de emision, mensaje a enviar, delay entre mensajes, con/sin mensaje de confirmación)
+  //status=receive_message(20, false);
 
 
   //Serial.println(status);
